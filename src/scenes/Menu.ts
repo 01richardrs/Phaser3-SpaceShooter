@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 
 
-let status = true;
+let status = true;//gameStatus
 export default class Menu extends Phaser.Scene{
 
   constructor()
@@ -10,28 +10,50 @@ export default class Menu extends Phaser.Scene{
   }
 
   
-  create() { 
+  create() {
     //measure scale
-    const width = this.scale.width*0.7
-	  const height = this.scale.height*0.7
+    const width = this.scale.width * 0.7
+    const height = this.scale.height * 0.7
     const totalWidth = width * 10
     
     this.createAligned(this, totalWidth, 'bg', 0.5);
 
+    //style
+    let menuStyle = { fill: '#fff', fontSize: '38px' };
+    let levelStyle = {fill: '#fff', fontSize: '45px'}
+
     //below init text
     const logo = this.add.image(400, 150, 'logo').setScale(0.5).setScrollFactor(0);
-    const start = this.add.text(340, 280, 'Start', { fill: '#fff', fontSize: '38px' }).setScrollFactor(0).setInteractive();
-    const credit = this.add.text(310, 350, 'Credits', { fill: '#fff', fontSize: '38px' }).setScrollFactor(0).setInteractive();
-    const exit = this.add.text(350, 420, 'Exit', { fill: '#fff', fontSize: '38px' }).setScrollFactor(0).setInteractive();
-    const programby = this.add.text(250, 280, 'Programmed by: ', { fill: '#fff', fontSize: '38px' }).setScrollFactor(0);
-    const programer = this.add.text(300, 340, 'Richard S ', { fill: '#fff', fontSize: '38px' }).setScrollFactor(0);
+    const start = this.add.text(340, 280, 'Start', menuStyle).setScrollFactor(0).setInteractive();
+    const credit = this.add.text(310, 350, 'Credits', menuStyle).setScrollFactor(0).setInteractive();
+    const exit = this.add.text(350, 420, 'Exit', menuStyle).setScrollFactor(0).setInteractive();
+    const programby = this.add.text(250, 280, 'Programmed by: ', menuStyle).setScrollFactor(0);
+    const programer = this.add.text(300, 340, 'Richard S ', menuStyle).setScrollFactor(0);
     const exits = this.add.text(180, 280, '<--').setScrollFactor(0).setInteractive();
+    const chooseLevel = this.add.text(230, 280, 'Choose Level :', menuStyle).setScrollFactor(0);
+    const level1 = this.add.text(280, 340, '1', levelStyle).setScrollFactor(0).setInteractive();
+    const level2 = this.add.text(380, 340, '2', levelStyle).setScrollFactor(0).setInteractive();
+    const level3 = this.add.text(480, 340, '3', levelStyle).setScrollFactor(0).setInteractive();
+    
+    //make other text invisible
     exits.visible = false;
     programby.visible = false;
     programer.visible = false;
+    chooseLevel.visible = false;
+    level1.visible = false;
+    level2.visible = false;
+    level3.visible = false;
 
-    start.on('pointerdown', () => {//start button
-      
+    //button
+    start.on('pointerdown', () => {
+      chooseLevel.visible = true;
+      level1.visible = true;
+      level2.visible = true;
+      level3.visible = true;
+      exits.visible = true;
+      start.visible = false;
+      credit.visible = false;
+      exit.visible = false;
     });
     start.on('pointerover', () => {
       start.setStyle({ fill: '#ff0' })
@@ -40,7 +62,7 @@ export default class Menu extends Phaser.Scene{
       start.setStyle({ fill: '#fff' })
     });
 
-    credit.on('pointerdown', () => {//credits button
+    credit.on('pointerdown', () => {
       start.visible = false;
       credit.visible = false;
       exit.visible = false;
@@ -72,6 +94,10 @@ export default class Menu extends Phaser.Scene{
       exits.visible = false;
       programby.visible = false;
       programer.visible = false;
+      chooseLevel.visible = false;
+      level1.visible = false;
+      level2.visible = false;
+      level3.visible = false;
     });
     exits.on('pointerover', () => {
       exits.setStyle({ fill: '#ff0' })
@@ -80,6 +106,38 @@ export default class Menu extends Phaser.Scene{
       exits.setStyle({ fill: '#fff' })
     });
     
+    level1.on('pointerdown', () => {
+      this.scene.launch('Level1');
+      this.scene.pause();
+    });
+    level1.on('pointerover', () => {
+      level1.setStyle({ fill: '#ff0' })
+    });
+    level1.on('pointerout', () => {
+      level1.setStyle({ fill: '#fff' })
+    });
+
+    level2.on('pointerdown', () => {
+      this.scene.launch('Level2');
+      this.scene.pause();
+    });
+    level2.on('pointerover', () => {
+      level2.setStyle({ fill: '#ff0' })
+    });
+    level2.on('pointerout', () => {
+      level2.setStyle({ fill: '#fff' })
+    });
+
+    level3.on('pointerdown', () => {
+      this.scene.launch('Level3');
+      this.scene.pause();
+    });
+    level3.on('pointerover', () => {
+      level3.setStyle({ fill: '#ff0' })
+    });
+    level3.on('pointerout', () => {
+      level3.setStyle({ fill: '#fff' })
+    });
   
   }
 
@@ -98,7 +156,7 @@ export default class Menu extends Phaser.Scene{
     const count = Math.ceil(totalWidth / w) * scrollFactor
   
     let x = 0
-    for (let i = 0; i < count; ++i)
+    for (let i = 0; i < count+100; ++i)
     {
       const m = scene.add.image(x, scene.scale.height, texture)
         .setOrigin(0, 1)
