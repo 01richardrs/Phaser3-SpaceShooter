@@ -108,7 +108,7 @@ export default class Menu extends Phaser.Scene{
     
     level1.on('pointerdown', () => {
       this.scene.launch('Level1');
-      this.scene.pause();
+      this.scene.stop();
     });
     level1.on('pointerover', () => {
       level1.setStyle({ fill: '#ff0' })
@@ -119,7 +119,7 @@ export default class Menu extends Phaser.Scene{
 
     level2.on('pointerdown', () => {
       this.scene.launch('Level2');
-      this.scene.pause();
+      this.scene.stop();
     });
     level2.on('pointerover', () => {
       level2.setStyle({ fill: '#ff0' })
@@ -130,7 +130,7 @@ export default class Menu extends Phaser.Scene{
 
     level3.on('pointerdown', () => {
       this.scene.launch('Level3');
-      this.scene.pause();
+      this.scene.stop();
     });
     level3.on('pointerover', () => {
       level3.setStyle({ fill: '#ff0' })

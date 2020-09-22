@@ -1,12 +1,13 @@
 import Phaser from 'phaser'
 import Level1 from './Level1';
 
-
+let level;
 export default class Pause extends Phaser.Scene{
   
-  //init(data) {
-  //  let level = data.level;
- // } //+bg transparent
+  init(data) {
+    level = data.level;
+  }
+  //+bg transparent
   constructor() {
     super('pause')
   }
@@ -24,8 +25,17 @@ export default class Pause extends Phaser.Scene{
     
     //button
     play.on('pointerdown', () => {
-      this.scene.resume('Level1')//get data from up
-      this.scene.stop();
+      if (level == 1) {
+        this.scene.resume('Level1')
+        this.scene.stop();
+      } else if (level == 2) {
+        this.scene.resume('Level2')
+        this.scene.stop();
+      } else {
+        this.scene.resume('Level3')
+        this.scene.stop();
+      }
+      
     });
     play.on('pointerover', () => {
       play.setStyle({ fill: '#ff0' })
@@ -35,10 +45,15 @@ export default class Pause extends Phaser.Scene{
     });
 
     back.on('pointerdown', () => {
+      if (level == 1) {
+        this.scene.stop('Level1')
+      } else if (level == 2) {
+        this.scene.stop('Level2')
+      } else {
+        this.scene.stop('Level3')
+      }
       this.scene.launch('Main-Menu');
       this.scene.stop();
-      //kill prev scene if run in bg
-      //still error
     });
     back.on('pointerover', () => {
       back.setStyle({ fill: '#ff0' })
