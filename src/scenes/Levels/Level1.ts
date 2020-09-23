@@ -1,26 +1,35 @@
-import Phaser from 'phaser'
+import Phaser, { GameObjects, Time } from 'phaser'
 
 let status = true;//gameStatus
+let cursors;
+let player;
+let playerSpeed;
+let cams;
 export default class Level1 extends Phaser.Scene{
 
   constructor() {
-    super('Level1');
+    super('Level1');  
   }
-//TODO: - TUts,level,BG Music
+//TODO: - level,BG Music+mobile drag
   preload() {
     //load game assets
+    this.load.image('player', 'GameAssets/plane/player.png');
+    this.load.image('enemy', 'GameAssets/plane/enemy.png');
     this.load.image('laserB', 'GameAssets/laser/laserBlue.png');
     this.load.image('laserR', 'GameAssets/laser/laserRed.png');
   }
 
   create() {
+
     //measure scale
     const width = this.scale.width * 0.7
     const height = this.scale.height * 0.7
     const totalWidth = width * 10
     
     this.createAligned(this, totalWidth, 'bg', 0.5);
-
+    //add player
+    this.addPlayer();
+    
     //textStyle
     let topText = {fill: '#fff', fontSize: '35px'};
     let buttonText = {fill: '#fff', fontSize: '30px'};
@@ -35,7 +44,8 @@ export default class Level1 extends Phaser.Scene{
     const stageLevel = this.add.text(270, 150, 'Level 1',openingText).setScrollFactor(0);
     const ready = this.add.text(340, 230, 'Ready',subOpeningText).setScrollFactor(0);
     const go = this.add.text(340, 230, 'Go!!!', subOpeningText).setScrollFactor(0);
-    
+    const lilguide = this.add.text(450, 400, 'Use Arrow Key to Move').setScrollFactor(0);
+    const lilguide2 = this.add.text(450, 430, 'Use Space to shoot').setScrollFactor(0);
     //hideText
     go.visible = false;
 
@@ -49,6 +59,10 @@ export default class Level1 extends Phaser.Scene{
       go.visible = false;
       stageLevel.visible = false;
     }, [], this);
+    this.time.delayedCall(2000, () => {
+      lilguide.visible = false;
+      lilguide2.visible = false;
+    }, [], this);
 
     //buttons
     pause.on('pointerdown', () => {
@@ -61,16 +75,52 @@ export default class Level1 extends Phaser.Scene{
     pause.on('pointerout', () => {
       pause.setStyle({ fill: '#fff' })
     });
-
   }
 
   update() {
-    const cam = this.cameras.main;
+    cams = this.cameras.main;
     const speed = 5;
 
     if (status) {//keep camera moving
-      cam.scrollX += speed;
+      cams.scrollX += speed;
+     
+      //input
+      if (cursors.left.isDown) {
+        player.setVelocityX(-playerSpeed);
+      } else if (cursors.right.isDown) {
+        player.setVelocityX(playerSpeed);
+      } else {
+        player.setVelocityX(0);
+      }
+
+      if (cursors.up.isDown) {
+        player.setVelocityY(-playerSpeed);
+      } else if (cursors.down.isDown) {
+        player.setVelocityY(playerSpeed);
+      } else {
+        player.setVelocityY(0);
+      }
+
+      if (this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).isDown) {
+        this.shootLaser();
+      } 
+      
     }
+
+  }
+
+  shootLaser() {//shoot laser
+    let laserGroup = new LaserGroup(this);
+    laserGroup.fireLaser(player.x ,player.y - 20);
+  }
+
+  addPlayer() {//add player
+    cams = this.cameras.main;
+    player = this.physics.add.sprite(cams.width/2, cams.height-90, 'player').setScale(0.65).setScrollFactor(0);
+    cursors = this.input.keyboard.createCursorKeys();
+    player.setCollideWorldBounds(true);
+    playerSpeed = 250;
+    player.enableBody = true;
   }
 
   //paralax functions for adding new bg next to it to prevent blank
@@ -86,6 +136,51 @@ export default class Level1 extends Phaser.Scene{
         .setScrollFactor(scrollFactor)
   
       x += m.width
+    }
+  }
+}
+
+class LaserGroup extends Phaser.Physics.Arcade.Group{//grouping for laser
+  constructor(scene) {
+    super(scene.physics.world, scene);
+
+    this.createMultiple({
+      classType: Laser,
+      frameQuantity: 30,
+      active: false,
+      visible: true,
+      key: 'laser'
+    })
+  }
+
+  fireLaser(x, y) {
+    const laser = this.getFirstDead(false);
+    if (laser) {
+      laser.fire(x, y);
+    }
+  }
+}
+
+class Laser extends Phaser.Physics.Arcade.Sprite{//laser
+  constructor(scene, x, y) {
+    super(scene, x, y, 'laserR');
+  }
+
+  fire(x, y) {
+    this.body.reset(x, y);
+    this.setActive(true);
+    this.setVisible(true);
+
+    this.setVelocityY(-900);
+    this.setScrollFactor(0);
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+
+    if (this.y <= 0) {
+      this.setActive(false);
+      this.setVisible(false);
     }
   }
 }
