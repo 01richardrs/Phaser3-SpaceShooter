@@ -5,12 +5,12 @@ let cursors;
 let player;
 let playerSpeed;
 let cams;
-export default class Level1 extends Phaser.Scene{
+export default class Level1 extends Phaser.Scene {
 
   constructor() {
-    super('Level1');  
+    super('Level1');
   }
-//TODO: - level,BG Music+mobile drag
+  //TODO: - level,BG Music
   preload() {
     //load game assets
     this.load.image('player', 'GameAssets/plane/player.png');
@@ -31,18 +31,18 @@ export default class Level1 extends Phaser.Scene{
     this.addPlayer();
     
     //textStyle
-    let topText = {fill: '#fff', fontSize: '35px'};
-    let buttonText = {fill: '#fff', fontSize: '30px'};
+    let topText = { fill: '#fff', fontSize: '35px' };
+    let buttonText = { fill: '#fff', fontSize: '30px' };
     let openingText = { fill: '#fff', fontSize: '65px' };
-    let subOpeningText = {fill: '#fff', fontSize: '45px'};
+    let subOpeningText = { fill: '#fff', fontSize: '45px' };
 
     //text
-    const pause = this.add.text(20, 20, '||',buttonText).setScrollFactor(0).setInteractive();
-    const currLevel = this.add.text(80, 20, 'Level - 1',topText).setScrollFactor(0);
+    const pause = this.add.text(20, 20, '||', buttonText).setScrollFactor(0).setInteractive();
+    const currLevel = this.add.text(80, 20, 'Level - 1', topText).setScrollFactor(0);
     let playerHealth = this.add.text(550, 20, 'Life : 3', topText).setScrollFactor(0);
     
-    const stageLevel = this.add.text(270, 150, 'Level 1',openingText).setScrollFactor(0);
-    const ready = this.add.text(340, 230, 'Ready',subOpeningText).setScrollFactor(0);
+    const stageLevel = this.add.text(270, 150, 'Level 1', openingText).setScrollFactor(0);
+    const ready = this.add.text(340, 230, 'Ready', subOpeningText).setScrollFactor(0);
     const go = this.add.text(340, 230, 'Go!!!', subOpeningText).setScrollFactor(0);
     const lilguide = this.add.text(450, 400, 'Use Arrow Key to Move').setScrollFactor(0);
     const lilguide2 = this.add.text(450, 430, 'Use Space to shoot').setScrollFactor(0);
@@ -62,11 +62,12 @@ export default class Level1 extends Phaser.Scene{
     this.time.delayedCall(2000, () => {
       lilguide.visible = false;
       lilguide2.visible = false;
+      this.enemySpawn();
     }, [], this);
 
     //buttons
     pause.on('pointerdown', () => {
-      this.scene.launch('pause',{ level: 1});
+      this.scene.launch('pause', { level: 1 });
       this.scene.pause();
     });
     pause.on('pointerover', () => {
@@ -75,6 +76,7 @@ export default class Level1 extends Phaser.Scene{
     pause.on('pointerout', () => {
       pause.setStyle({ fill: '#fff' })
     });
+
   }
 
   update() {
@@ -103,7 +105,7 @@ export default class Level1 extends Phaser.Scene{
 
       if (this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).isDown) {
         this.shootLaser();
-      } 
+      }
       
     }
 
@@ -111,16 +113,35 @@ export default class Level1 extends Phaser.Scene{
 
   shootLaser() {//shoot laser
     let laserGroup = new LaserGroup(this);
-    laserGroup.fireLaser(player.x ,player.y - 20);
+    laserGroup.fireLaser(player.x, player.y - 50);
+  }
+
+  enemySpawn() {//spawn enemy
+    for (let i = 0; i < 5; i++) {
+      let X = Phaser.Math.Between(80, 750);
+      let Y = Phaser.Math.Between(80, 350);   
+      let enemyGroup = new EnemyGroup(this);
+      enemyGroup.spawnEnemy(X, Y);
+    }
   }
 
   addPlayer() {//add player
+    let enemyLaser = new LaserGroup(this);
     cams = this.cameras.main;
     player = this.physics.add.sprite(cams.width/2, cams.height-90, 'player').setScale(0.65).setScrollFactor(0);
     cursors = this.input.keyboard.createCursorKeys();
     player.setCollideWorldBounds(true);
     playerSpeed = 250;
     player.enableBody = true;
+    this.physics.add.collider(player, enemyLaser, this.getHit);
+  }
+
+  getHit() {
+    let enemyGroup = new EnemyGroup(this);
+    enemyGroup.destroy();
+    //this.physics.pause;
+    //this.add.text(this.cameras.main.width/2, this.cameras.main.width/2, 'Game Over');
+    //status = false;
   }
 
   //paralax functions for adding new bg next to it to prevent blank
@@ -159,6 +180,12 @@ class LaserGroup extends Phaser.Physics.Arcade.Group{//grouping for laser
       laser.fire(x, y);
     }
   }
+  enemyLaser(x, y) {
+    const laser = this.getFirstDead(false);
+    if (laser) {
+      laser.fire2(x, y);
+    }
+  }
 }
 
 class Laser extends Phaser.Physics.Arcade.Sprite{//laser
@@ -168,11 +195,73 @@ class Laser extends Phaser.Physics.Arcade.Sprite{//laser
 
   fire(x, y) {
     this.body.reset(x, y);
+    this.setScale(0.5);
     this.setActive(true);
     this.setVisible(true);
 
     this.setVelocityY(-900);
     this.setScrollFactor(0);
+  }
+
+  fire2(x, y) {
+    this.body.reset(x, y);
+    this.setScale(0.5);
+    this.setActive(true);
+    this.setVisible(true);
+
+    this.setVelocityY(900);
+    this.setScrollFactor(0);
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+
+    if (this.y <= 0) {
+      this.setActive(false);
+      this.setVisible(false);
+    }
+  }
+}
+
+class EnemyGroup extends Phaser.Physics.Arcade.Group {//grouping for enemy
+  constructor(scene) {
+    super(scene.physics.world, scene);
+
+    this.createMultiple({
+      classType: Enemy,
+      frameQuantity: 30,
+      active: false,
+      visible: true,
+      key: 'enemy'
+    })
+  }
+  spawnEnemy(x, y) {
+    const enemy = this.getFirstDead(false);
+    if (enemy) {
+      enemy.spawn(x, y);
+    }
+  }
+}
+
+class Enemy extends Phaser.Physics.Arcade.Sprite{//enemy
+  constructor(scene, x, y) {
+    super(scene, x, y, 'enemy');
+  }
+
+  spawn(x, y) {
+    this.setScale(0.5);
+    this.body.reset(x, y);
+    this.setActive(true);
+    this.setVisible(true);
+    //this.setVelocityY(-900);
+    this.setScrollFactor(0);
+    //while alive shoot everysec
+    //this.shoot();
+    
+  }
+
+  shoot() { 
+    let laserGroup = new Laser(this,this.x, this.y +25);
   }
 
   preUpdate(time, delta) {
